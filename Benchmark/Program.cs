@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using System.IO;
 using System.Text;
 using System.Collections;
+using System.Diagnostics;
 
 namespace Timing
 {
@@ -13,58 +14,84 @@ namespace Timing
     {
         static void Main(string[] args)
         {
-            // Console.WriteLine("Enter the path to a csv file containing automata: ");
-            // String csv = Console.ReadLine();
-            String csv = "../../../../automatatutor-data/dfa/simple.csv";
+            String path = "../../../../automatatutor-data/dfa/";
+            //Console.WriteLine("Enter the name of csv file in " + path + " containing automata: ");
+            //String csv = path + Console.ReadLine();
+            String csv = "../../../../automatatutor-data/dfa/dfa1.csv";
             using (StreamReader textReader = new StreamReader(csv))
             {
                 String[] automata = readCSV(textReader);
 
                 
                 IEnumerator enumerator = automata.GetEnumerator();
-                while (enumerator.MoveNext())
+                bool done = false;
+                enumerator.MoveNext();
+                while (!done)
                 {
                     try
                     {
                         skipWhitespace(enumerator);
 
+                        String description = ((String)enumerator.Current).Trim();
 
-                        String description = (String)enumerator.Current;
                         enumerator.MoveNext();
+                        skipWhitespace(enumerator);
 
-                        if (!skipWhitespace(enumerator))
-                        {
-                            enumerator.MoveNext();
-                        }
+                        String correctDFAXML = ((String)enumerator.Current).Trim();
 
-                        String correctDFAXML = (String)enumerator.Current;
                         enumerator.MoveNext();
-                        if (!skipWhitespace(enumerator))
-                        {
-                            enumerator.MoveNext();
-                        }
+                        skipWhitespace(enumerator);
 
-                        String attemptDFAXML = (String)enumerator.Current;
+                        String attemptDFAXML = ((String)enumerator.Current).Trim();
 
-                        //Console.Write(description);
+                        enumerator.MoveNext();
+                        done = skipWhitespace(enumerator);
+
+                        // DEBUGGING
+                        Console.Write("\nDESCRIPTION \n");
+                        Console.Write(description);
+                        //Console.Write("\nCORRECT XML \n");
                         //Console.Write(correctDFAXML);
+                        //Console.Write("\nATTEMPT XML \n");
                         //Console.Write(attemptDFAXML);
 
                         CharSetSolver solver = new CharSetSolver(BitWidth.BV64);
 
-                        XElement dfaCorrectDesc = XElement.Parse(correctDFAXML);
-                        XElement dfaAttemptDesc = XElement.Parse(attemptDFAXML);
+                        XElement dfaCorrectDesc = null;
+                        XElement dfaAttemptDesc = null;
+                        try
+                        {
+                            dfaCorrectDesc = XElement.Parse(correctDFAXML);
+                        }
+                        catch (Exception)
+                        {
+                            Console.Write("\nFAILED PARSING: \n\"" + correctDFAXML + "\"\n");
+                            throw new Exception();
+                        }
+
+                        try
+                        {
+                            dfaAttemptDesc = XElement.Parse(attemptDFAXML);
+                        }
+                        catch (Exception)
+                        {
+                            Console.Write("\nFAILED PARSING: \n\"" + attemptDFAXML + "\"\n");
+                            throw new Exception();
+                        }
 
                         //Read input 
                         var dfaCorrectPair = DFAUtilities.parseDFAFromXML(dfaCorrectDesc, solver);
                         var dfaAttemptPair = DFAUtilities.parseDFAFromXML(dfaAttemptDesc, solver);
                         if (!dfaCorrectPair.First.SetEquals(dfaAttemptPair.First))
                         {
-                            Console.WriteLine("Alphabets not the same, (or they are and this comparison doesn't make sense).");
                             throw new System.ArgumentException();
                         }
                         var alphabet = dfaCorrectPair.First;
+                        Stopwatch stopwatch = new Stopwatch();
+                        stopwatch.Start();
                         DFAGrading.GetGrade(dfaCorrectPair.Second, dfaAttemptPair.Second, alphabet, solver, 2000, 100, FeedbackLevel.Minimal, true, false, false);
+                        stopwatch.Stop();
+                        Console.Write("\n" + stopwatch.Elapsed.Milliseconds);
                     }
                     catch (IndexOutOfRangeException)
                     {
@@ -93,17 +120,18 @@ namespace Timing
 
         static bool skipWhitespace(IEnumerator enumerator)
         {
-            bool skipped = false;
-            while ( String.IsNullOrWhiteSpace(((String)enumerator.Current).Trim()) )
+            // let calling method know if end of input was reached
+            bool outOfInput = false;
+            while ( String.IsNullOrWhiteSpace(((String)enumerator.Current)) )
             {
-                skipped = true;
                 if (!enumerator.MoveNext())
                 {
-                    throw new IndexOutOfRangeException();
+                    outOfInput = true;
+                    break;
                 }
             }
             //Console.Write(">>>>>>" + ((String)enumerator.Current).Trim() + "<<<<<<<<<");
-            return skipped;
+            return outOfInput;
         }
     }
 }
