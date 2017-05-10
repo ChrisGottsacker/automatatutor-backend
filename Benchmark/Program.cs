@@ -58,10 +58,10 @@ namespace Timing
                         //Read input 
                         var dfaCorrectPair = DFAUtilities.parseDFAFromXML(dfaCorrectDesc, solver);
                         var dfaAttemptPair = DFAUtilities.parseDFAFromXML(dfaAttemptDesc, solver);
-                        if (dfaCorrectPair.First != dfaAttemptPair.First)
+                        if (!dfaCorrectPair.First.SetEquals(dfaAttemptPair.First))
                         {
                             Console.WriteLine("Alphabets not the same, (or they are and this comparison doesn't make sense).");
-                            // throw new System.MissingFieldException();
+                            throw new System.ArgumentException();
                         }
                         var alphabet = dfaCorrectPair.First;
                         DFAGrading.GetGrade(dfaCorrectPair.Second, dfaAttemptPair.Second, alphabet, solver, 2000, 100, FeedbackLevel.Minimal, true, false, false);
