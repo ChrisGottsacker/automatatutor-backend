@@ -21,9 +21,20 @@ namespace Timing
             String csv = "../../../../automatatutor-data/dfa/dfa1.csv";
             using (StreamReader textReader = new StreamReader(csv))
             {
+                System.IO.StreamWriter stats = new System.IO.StreamWriter("../../../../misc/stats-VS.csv");
+                stats.WriteLine(
+                    "id," +
+                    "description," +
+                    "running time (ms)," +
+                    "num. student states," +
+                    "num. teacher states," +
+                    "num. characters"
+                );
+
                 String[] automata = readCSV(textReader);
 
-                
+                int exampleId = 0; // used to uniquely identify a student-teacher pair
+
                 IEnumerator enumerator = automata.GetEnumerator();
                 char[] trimmedCharacters = {'"'};
                 bool hasNext = enumerator.MoveNext();
@@ -41,7 +52,7 @@ namespace Timing
                         hasNext = enumerator.MoveNext();
 
                         // DEBUGGING
-                        Console.Write("\nDESCRIPTION \n");
+                        Console.Write("\nDESCRIPTION of example id " + exampleId + "\n");
                         Console.Write(description);
                         //Console.Write("\nCORRECT XML \n");
                         //Console.Write(correctDFAXML);
@@ -80,11 +91,24 @@ namespace Timing
                             throw new System.ArgumentException();
                         }
                         var alphabet = dfaCorrectPair.First;
+
+                        // time how long it takes to compute the edit distance
                         Stopwatch stopwatch = new Stopwatch();
                         stopwatch.Start();
                         DFAGrading.GetGrade(dfaCorrectPair.Second, dfaAttemptPair.Second, alphabet, solver, 2000, 100, FeedbackLevel.Minimal, true, false, false);
                         stopwatch.Stop();
                         Console.Write("\n" + stopwatch.Elapsed.Milliseconds);
+
+                        // write line to file
+                        stats.WriteLine(
+                            exampleId + "," +
+                            description + "," +
+                            stopwatch.Elapsed.Milliseconds + "," +
+                            dfaAttemptPair.Second.StateCount + "," +
+                            dfaCorrectPair.Second.StateCount + "," +
+                            alphabet.Count
+                        );
+                        exampleId++;
                     }
                     catch (IndexOutOfRangeException)
                     {
