@@ -95,19 +95,30 @@ namespace Timing
                         // time how long it takes to compute the edit distance
                         Stopwatch stopwatch = new Stopwatch();
                         stopwatch.Start();
-                        DFAGrading.GetGrade(dfaCorrectPair.Second, dfaAttemptPair.Second, alphabet, solver, 2000, 100, FeedbackLevel.Minimal, true, false, false);
+                        var feedback = DFAGrading.GetGrade(dfaCorrectPair.Second, dfaAttemptPair.Second, alphabet, solver, 2000, 100, FeedbackLevel.Minimal, true, false, false);
                         stopwatch.Stop();
                         Console.Write("\n" + stopwatch.Elapsed.Milliseconds);
 
-                        // write line to file
-                        stats.WriteLine(
-                            exampleId + "," +
-                            description + "," +
-                            stopwatch.Elapsed.Milliseconds + "," +
-                            dfaAttemptPair.Second.StateCount + "," +
-                            dfaCorrectPair.Second.StateCount + "," +
-                            alphabet.Count
-                        );
+                        // a really stupid way to find out if the student DFA is equivalent to the correct DFA
+                        bool attemptIsCorrect = false;
+                        foreach (var feed in feedback.Second)
+                        {
+                            attemptIsCorrect = feed.ToString().Equals("CORRECT!!");
+                            break;
+                        }
+
+                        if (!attemptIsCorrect)
+                        {
+                            // write line to file
+                            stats.WriteLine(
+                                exampleId + "," +
+                                description + "," +
+                                stopwatch.Elapsed.Milliseconds + "," +
+                                dfaAttemptPair.Second.StateCount + "," +
+                                dfaCorrectPair.Second.StateCount + "," +
+                                alphabet.Count
+                            );
+                        }
                         exampleId++;
                     }
                     catch (IndexOutOfRangeException)
