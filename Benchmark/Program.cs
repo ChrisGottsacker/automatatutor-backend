@@ -17,6 +17,7 @@ namespace Timing
             String path = "../../../../automatatutor-data/dfa/";
             //Console.WriteLine("Enter the name of csv file in " + path + " containing automata: ");
             //String csv = path + Console.ReadLine();
+            //String csv = "../../../../automatatutor-data/dfa/simple.csv";
             String csv = "../../../../automatatutor-data/dfa/dfa1.csv";
             using (StreamReader textReader = new StreamReader(csv))
             {
@@ -24,28 +25,20 @@ namespace Timing
 
                 
                 IEnumerator enumerator = automata.GetEnumerator();
-                bool done = false;
-                enumerator.MoveNext();
-                while (!done)
+                char[] trimmedCharacters = {'"'};
+                bool hasNext = enumerator.MoveNext();
+                while (hasNext)
                 {
                     try
                     {
-                        skipWhitespace(enumerator);
-
-                        String description = ((String)enumerator.Current).Trim();
-
+                        String description = ((String)enumerator.Current).Trim().Trim(trimmedCharacters);
                         enumerator.MoveNext();
-                        skipWhitespace(enumerator);
 
-                        String correctDFAXML = ((String)enumerator.Current).Trim();
-
+                        String correctDFAXML = ((String)enumerator.Current).Trim().Trim(trimmedCharacters);
                         enumerator.MoveNext();
-                        skipWhitespace(enumerator);
 
-                        String attemptDFAXML = ((String)enumerator.Current).Trim();
-
-                        enumerator.MoveNext();
-                        done = skipWhitespace(enumerator);
+                        String attemptDFAXML = ((String)enumerator.Current).Trim().Trim(trimmedCharacters);
+                        hasNext = enumerator.MoveNext();
 
                         // DEBUGGING
                         Console.Write("\nDESCRIPTION \n");
@@ -65,7 +58,7 @@ namespace Timing
                         }
                         catch (Exception)
                         {
-                            Console.Write("\nFAILED PARSING: \n\"" + correctDFAXML + "\"\n");
+                            Console.Write("\nFAILED PARSING CORRECT XML: \n>>>>>>>" + correctDFAXML + "<<<<<<<<<\n");
                             throw new Exception();
                         }
 
@@ -75,7 +68,7 @@ namespace Timing
                         }
                         catch (Exception)
                         {
-                            Console.Write("\nFAILED PARSING: \n\"" + attemptDFAXML + "\"\n");
+                            Console.Write("\nFAILED PARSING CORRECT XML: \n>>>>>>>" + attemptDFAXML + "<<<<<<<<<\n");
                             throw new Exception();
                         }
 
@@ -103,6 +96,7 @@ namespace Timing
 
                 }
 
+                // just so Visual Studio keeps the Console open
                 Console.Read();
 
             }
@@ -112,26 +106,11 @@ namespace Timing
 
         static String[] readCSV(StreamReader reader)
         {
-            char[] delimiters = {',', '"'};
-            String[] automata = reader.ReadToEnd().Split(delimiters);
+            //char[] delimiters = {',', '"'};
+            String[] delimiters = {",", "\"\n\""};
+            String[] automata = reader.ReadToEnd().Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
             
             return automata;
-        }
-
-        static bool skipWhitespace(IEnumerator enumerator)
-        {
-            // let calling method know if end of input was reached
-            bool outOfInput = false;
-            while ( String.IsNullOrWhiteSpace(((String)enumerator.Current)) )
-            {
-                if (!enumerator.MoveNext())
-                {
-                    outOfInput = true;
-                    break;
-                }
-            }
-            //Console.Write(">>>>>>" + ((String)enumerator.Current).Trim() + "<<<<<<<<<");
-            return outOfInput;
         }
     }
 }
