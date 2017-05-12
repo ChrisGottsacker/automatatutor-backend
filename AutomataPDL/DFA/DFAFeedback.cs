@@ -81,7 +81,7 @@ namespace AutomataPDL
     /// This feedback outputs a set of edits that, if applied to the attempt DFA will
     /// transform it into a correct one.
     /// </summary>
-    class DFAEDFeedback : DFAFeedback
+    public class DFAEDFeedback : DFAFeedback
     {
         string counterexample;
         DFAEditScript script;
@@ -94,6 +94,11 @@ namespace AutomataPDL
             this.counterexample = DFAUtilities.GenerateShortTerm(positiveDifference.IsEmpty ? negativeDifference : positiveDifference, solver);
             this.type = FeedbackType.DFAED;
             this.script = script;
+        }
+
+        public int getCount()
+        {
+            return this.script.script.Count;
         }
 
         public override string ToString()

@@ -26,6 +26,7 @@ namespace Timing
                     "id," +
                     "description," +
                     "running time (ms)," +
+                    "num. changes," +
                     "num. student states," +
                     "num. teacher states," +
                     "num. characters"
@@ -99,12 +100,23 @@ namespace Timing
                         stopwatch.Stop();
                         Console.Write("\n" + stopwatch.Elapsed.Milliseconds);
 
-                        // a really stupid way to find out if the student DFA is equivalent to the correct DFA
                         bool attemptIsCorrect = false;
+                        int numChanges = 0;
                         foreach (var feed in feedback.Second)
                         {
-                            attemptIsCorrect = feed.ToString().Equals("CORRECT!!");
-                            break;
+                            // a really stupid way to find out if the student DFA is equivalent to the correct DFA
+                            try
+                            {
+                                if ( attemptIsCorrect = ((StringFeedback)feed).ToString().Equals("CORRECT!!")) { break; }
+                            }
+                            catch (Exception e) { }
+
+                            try
+                            {
+                                numChanges = ((AutomataPDL.DFAEDFeedback)feed).getCount();
+                                break;
+                            }
+                            catch (Exception e) { }
                         }
 
                         if (!attemptIsCorrect)
@@ -114,6 +126,7 @@ namespace Timing
                                 exampleId + "," +
                                 description + "," +
                                 stopwatch.Elapsed.Milliseconds + "," +
+                                numChanges + "," +
                                 dfaAttemptPair.Second.StateCount + "," +
                                 dfaCorrectPair.Second.StateCount + "," +
                                 alphabet.Count
